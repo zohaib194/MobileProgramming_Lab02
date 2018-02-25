@@ -1,10 +1,13 @@
 package com.example.zohaibbutt.lab02;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -27,6 +30,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class A1 extends AppCompatActivity {
     static final int GET_RESULT = 1;
@@ -42,10 +46,35 @@ public class A1 extends AppCompatActivity {
     static final String URL_VAL = "url.value";
     static final String LIMIT_VAL = "rate.limit.value";
     static final String FREQ_VAL = "freq.value";
+    DBHandler db;
+    RSSFeeds feedInfo;
+    private AlarmManager alarmManager;
+    private PendingIntent alarmIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_a1);
+
+        // DB init
+        db = new DBHandler(this, null, null, 1);
+
+        // Alarm
+        this.alarmManager = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        this.alarmIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+        // Set the alarm to start at 8:30 a.m.
+        //Calendar calendar = Calendar.getInstance();
+        //calendar.setTimeInMillis(System.currentTimeMillis());
+        //calendar.set(Calendar.HOUR_OF_DAY, 8);
+        //calendar.set(Calendar.MINUTE, 30);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                1000 * 60 * 2, this.alarmIntent);
+        Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
+
+
         // allocating memory for titles and links
         this.titles = new ArrayList<String>();
         this.links = new ArrayList<String>();
@@ -68,15 +97,18 @@ public class A1 extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        Toast.makeText(A1.this, requestURL, Toast.LENGTH_LONG).show();
 
         // check database
+        if(db.feedInDB(requestURL)){
+            titles = db.DBToString("FeedTitle");
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(A1.this, android.R.layout.simple_list_item_1, titles);
+            itemsList.setAdapter(adapter);
+        } else {
+            // Get the RSS feed
+            new ProcessInBackground().execute();
+            // Toast.makeText(A1.this, feedInfo.getLink(), Toast.LENGTH_LONG).show();
+        }
 
-        // empty array lists
-        this.titles.clear();
-        this.links.clear();
-
-        new ProcessInBackground().execute();
     }
 
     // Go to A3(Settings where user can specify details about RSS)
@@ -104,8 +136,20 @@ public class A1 extends AppCompatActivity {
         requestURL = data.getStringExtra(URL_VAL);
         viewLimit = data.getIntExtra(LIMIT_VAL, 0);
         freq = data.getIntExtra(FREQ_VAL, 0);
-        // Update the current feed view.
-        new ProcessInBackground().execute();
+
+        // empty array lists
+        this.titles.clear();
+        this.links.clear();
+
+         // check database
+        if(db.feedInDB(requestURL)){
+            titles = db.DBToString("FeedTitle");
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(A1.this, android.R.layout.simple_list_item_1, titles);
+            itemsList.setAdapter(adapter);
+        } else {
+            // Update the current feed view.
+            new ProcessInBackground().execute();
+        }
     }
 
     public InputStream getInputStream(URL url){
@@ -116,9 +160,11 @@ public class A1 extends AppCompatActivity {
         }
     }
 
+    // Thread that fetch data from XML.
     public class ProcessInBackground extends AsyncTask<Integer, Integer, Exception>{
         Exception exception;
         Integer countItemTags = 0;
+
         @Override
         protected void onPreExecute()
         {
@@ -141,6 +187,7 @@ public class A1 extends AppCompatActivity {
 
                 int eventType = xpp.getEventType();
                 boolean inItem = false;
+                boolean gotTitle = false, gotLink = false;
                 // Checks if the its not the end of XML document
                 while(eventType != XmlPullParser.END_DOCUMENT){
                     // Checks if its the start tag
@@ -154,24 +201,30 @@ public class A1 extends AppCompatActivity {
                         else if(xpp.getName().equalsIgnoreCase("title")){
                             if(inItem) { // and if are already in the item tag
                                 titles.add(xpp.nextText());
+                                gotTitle = true;
                             }
                         }
                         // Checks if its in the link tag
-                        else if(xpp.getName().equalsIgnoreCase("link")){
-                            if(inItem) { // and if we are already in the item tag
+                        else if(xpp.getName().equalsIgnoreCase("link")) {
+                            if (inItem) { // and if we are already in the item tag
                                 links.add(xpp.nextText());
+                                gotLink = true;
                             }
                         }
                         // checks if the XML end tag og item tag
                     } else if (eventType == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item")){
                         inItem = false;
                     }
-
                     eventType = xpp.next();
+                    if(gotTitle && gotLink){
+                        feedInfo = new RSSFeeds(requestURL ,titles.get(titles.size() - 1), links.get(links.size() - 1 ));
+                        db.addFeed(feedInfo);
+                        gotLink = false;
+                        gotTitle = false;
+                    }
                 }
             } catch (MalformedURLException e){
                 exception = e;
-
             } catch (IOException e){
                 exception = e;
             } catch (XmlPullParserException e){
@@ -186,9 +239,10 @@ public class A1 extends AppCompatActivity {
         {
             super.onPostExecute(s);
 
+            // Creates an adapter with layout and the data.
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(A1.this, android.R.layout.simple_list_item_1, titles);
 
-            adapter.notifyDataSetChanged();
+            // Sets the adapter to the list view.
             itemsList.setAdapter(adapter);
         }
     }

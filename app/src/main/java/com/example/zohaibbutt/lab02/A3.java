@@ -3,6 +3,7 @@ package com.example.zohaibbutt.lab02;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -35,7 +36,6 @@ public class A3 extends AppCompatActivity {
         T2.setText(""+sharedPref.getInt(LIMIT_VAL, 0 ));
         this.T3 = findViewById(R.id.T3);
         T3.setText(""+sharedPref.getInt(FREQ_VAL, 0));
-
         // Button
         this.b1 = findViewById(R.id.B1);
 

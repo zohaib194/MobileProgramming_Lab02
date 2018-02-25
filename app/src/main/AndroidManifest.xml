@@ -3,7 +3,8 @@
     package="com.example.zohaibbutt.lab02">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -21,8 +22,15 @@
 
         <activity android:name=".A3" />
         <activity android:name=".A2"/>
-    </application>
 
+        <receiver android:name=".AlarmReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
+
+    </application>
 
 
 </manifest>
