@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.zohaibbutt.lab02">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
 
     <application
         android:allowBackup="true"
@@ -19,17 +20,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".A3" />
         <activity android:name=".A2"/>
 
-        <receiver android:name=".AlarmReceiver"
-            android:enabled="true">
+        <receiver android:name=".A1$taskDoneReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="Task_Done_Listener" />
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".AlarmReceiver">
+            <intent-filter>
+                <action android:name="ACTION_ALARM_RECEIVER" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".BackgroundThread"
+            android:exported="false"
+            android:enabled="true"/>
     </application>
 
 
