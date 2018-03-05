@@ -126,7 +126,7 @@ public class A1 extends AppCompatActivity {
 
     public void setItemListAdapter(){
         // Creates an adapter with layout and the data.
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_2, android.R.id.text1, titles.subList(0, viewLimit)){
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_2, android.R.id.text1,  titles.subList(0, ((viewLimit > titles.size()) ? titles.size() : viewLimit))){
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {

@@ -122,13 +122,14 @@ public class AlarmReceiver extends BroadcastReceiver {
 
                 int eventType = xpp.getEventType();
                 boolean inItem = false;
+                boolean atom = true;
                 boolean gotTitle = false, gotLink = false, gotDesc = false;
                 // Checks if the its not the end of XML document
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     // Checks if its the start tag
                     if (eventType == XmlPullParser.START_TAG) {
                         // Checks if its in the item tag
-                        if (xpp.getName().equalsIgnoreCase("item")) {
+                        if (xpp.getName().equalsIgnoreCase(((atom) ? "entry" : "item"))) {
                             inItem = true;
                         }
                         // Checks if its in the tittle tag
@@ -141,16 +142,19 @@ public class AlarmReceiver extends BroadcastReceiver {
                         // Checks if its in the link tag
                         else if (xpp.getName().equalsIgnoreCase("link")) {
                             if (inItem) { // and if we are already in the item tag
-                                lists[1].add(xpp.nextText());
+                                lists[1].add(((atom) ? xpp.getAttributeValue("", "href") : xpp.nextText()));
                                 gotLink = true;
                             }
                         }
                         // Checks if its in the description tag
-                        else if (xpp.getName().equalsIgnoreCase("description")) {
+                        else if (xpp.getName().equalsIgnoreCase(((atom) ? "summary" : "description"))) {
                             if (inItem) { // and if we are already in the item tag
                                 lists[2].add(xpp.nextText());
                                 gotDesc = true;
                             }
+                        }
+                        else if(xpp.getName().equalsIgnoreCase("rss")){
+                            atom = false;
                         }
                         // checks if the XML end tag og item tag
                     } else if (eventType == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item")) {

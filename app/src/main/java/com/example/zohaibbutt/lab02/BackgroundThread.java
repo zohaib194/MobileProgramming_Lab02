@@ -48,8 +48,8 @@ public class BackgroundThread extends Service {
 
             this.alarmIntent = PendingIntent.getBroadcast(this, 0, i, 0);
 
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000 * frq,
-                    1000 * frq, alarmIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                    1000 * 60 * frq, alarmIntent);
 
             Log.i("Alarm_set", "Alarm set!");
         }
