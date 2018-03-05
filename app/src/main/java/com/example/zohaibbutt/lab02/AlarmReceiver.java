@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.zohaibbutt.lab02.A1.AsyncResponse;
 
@@ -20,9 +19,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static com.example.zohaibbutt.lab02.A1.TAG_DESC_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_LINKS_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_TITLE_LIST;
+import static com.example.zohaibbutt.lab02.A1.requestURL;
 import static com.example.zohaibbutt.lab02.BackgroundThread.ACTION_ALARM_RECEIVER;
+import static com.example.zohaibbutt.lab02.BackgroundThread.db;
+import static com.example.zohaibbutt.lab02.BackgroundThread.dsc;
 import static com.example.zohaibbutt.lab02.BackgroundThread.lnk;
 import static com.example.zohaibbutt.lab02.BackgroundThread.ttl;
 
@@ -33,30 +36,55 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (arg1 != null) {
             if (ACTION_ALARM_RECEIVER.equals(arg1.getAction())) {
                 Log.i("Alarm_Receiver", "in OnReceive!!");
+
+                // empty array lists
+                if (ttl != null && lnk != null && dsc != null) {
+                    cleanDataBase();
+                    ttl.clear();
+                    lnk.clear();
+                    dsc.clear();
+                }
+
+                // Set the alarm here.
+                ProcessInBackground task = new ProcessInBackground(new AsyncResponse() {
+                    @Override
+                    // callback method so that A1 know that async task is done and can now update listview
+                    public void processFinish(Exception s) {
+                        if (s == null) {
+                            Log.i("CALLBACK_ASYNC_EXCEPTION", "no exception");
+                            Intent i = new Intent();
+                            i.putStringArrayListExtra(TAG_TITLE_LIST, ttl);
+                            i.putStringArrayListExtra(TAG_LINKS_LIST, lnk);
+                            i.putStringArrayListExtra(TAG_DESC_LIST, dsc);
+                            i.setAction("Task_Done_Listener");
+                            arg0.sendBroadcast(i);
+                        } else {
+                            Log.e("CALLBACK_ASYNC_EXCEPTION", s.toString());
+                        }
+                    }
+                });
+                task.execute(ttl, lnk, dsc);
             }
         }
-        Toast.makeText(arg0, "I'm running", Toast.LENGTH_LONG).show();
-
-        // Set the alarm here.
-        ProcessInBackground task = new ProcessInBackground(new AsyncResponse(){
-            @Override
-            public void processFinish(Exception s){
-                if(s == null) {
-                    Log.i("CALLBACK_ASYNC_EXCEPTION", "" + ttl.size());
-                    Intent i = new Intent();
-                    i.putStringArrayListExtra(TAG_TITLE_LIST, ttl);
-                    i.putStringArrayListExtra(TAG_LINKS_LIST, lnk);
-                    i.setAction("Task_Done_Listener");
-                    arg0.sendBroadcast(i);
-                } else {
-                    Log.e("CALLBACK_ASYNC_EXCEPTION", s.toString());
-                }
-            }
-        });
-        task.execute(ttl, lnk);
     }
+    // clean the database for new rss feeds due to duplicate feeds
+    public void cleanDataBase() {
+        ttl = db.DBToString("FeedTitle");
+        lnk = db.DBToString("FeedLink");
+        dsc = db.DBToString("FeedDesc");
+        if (ttl.size() > 0) {
+            db.deleteFeed(new RSSFeeds(requestURL,
+                    ttl.get(ttl.size() - 1),
+                    lnk.get(lnk.size() - 1),
+                    dsc.get(dsc.size() - 1)));
+        }
+        Log.i("SIZES_AFTER_DB_CLEAR",
+                "titles:" + ttl.size() +
+                        ", links:" + lnk.size() +
+                        ", Description: "+ dsc.size());
 
-
+    }
+    // Process that fetch RSS feed from a given link
     class ProcessInBackground extends AsyncTask<ArrayList<String>, Void, Exception> {
         private Exception exception;
         AsyncResponse delegate = null;
@@ -82,7 +110,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         @Override
         protected final Exception doInBackground(ArrayList<String>... lists) {
             try {
-                URL url = new URL(A1.requestURL);
+                URL url = new URL(requestURL);
 
                 XmlPullParserFactory fact = XmlPullParserFactory.newInstance();
 
@@ -94,7 +122,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
                 int eventType = xpp.getEventType();
                 boolean inItem = false;
-                boolean gotTitle = false, gotLink = false;
+                boolean gotTitle = false, gotLink = false, gotDesc = false;
                 // Checks if the its not the end of XML document
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     // Checks if its the start tag
@@ -117,16 +145,26 @@ public class AlarmReceiver extends BroadcastReceiver {
                                 gotLink = true;
                             }
                         }
+                        // Checks if its in the description tag
+                        else if (xpp.getName().equalsIgnoreCase("description")) {
+                            if (inItem) { // and if we are already in the item tag
+                                lists[2].add(xpp.nextText());
+                                gotDesc = true;
+                            }
+                        }
                         // checks if the XML end tag og item tag
                     } else if (eventType == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item")) {
                         inItem = false;
                     }
                     eventType = xpp.next();
-                    if (gotTitle && gotLink) {
-                        RSSFeeds feedInfo = new RSSFeeds(A1.requestURL, lists[0].get(lists[0].size() - 1), lists[1].get(lists[1].size() - 1));
-                        BackgroundThread.db.addFeed(feedInfo);
+                    // if got all then save them in db
+                    if (gotTitle && gotLink && gotDesc) {
+                        RSSFeeds feedInfo = new RSSFeeds(requestURL, lists[0].get(lists[0].size() - 1), lists[1].get(lists[1].size() - 1), lists[2].get(lists[2].size() - 1));
+
+                        db.addFeed(feedInfo);
                         gotLink = false;
                         gotTitle = false;
+                        gotDesc = false;
                     }
                 }
             } catch (MalformedURLException e) {

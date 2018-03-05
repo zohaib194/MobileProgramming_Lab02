@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.Cursor;
 import android.content.Context;
 import android.content.ContentValues;
+import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,13 +19,15 @@ public class DBHandler extends SQLiteOpenHelper implements Serializable{
     public static final String COLUMN_RssURL = "URL";
     public static final String COLUMN_Feed = "FeedTitle";
     public static final String COLUMN_Link = "FeedLink";
+    public static final String COLUMN_Desc = "FeedDesc";
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + TABLE_NAME + "(" +
                     COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_RssURL + " TEXT, " +
                     COLUMN_Feed + " TEXT, " +
-                    COLUMN_Link + " TEXT);";
+                    COLUMN_Link + " TEXT, " +
+                    COLUMN_Desc + " TEXT);";
 
     private static final String SQL_DROP_TABLE =
             "DROP TABLE IF EXISTS " + TABLE_NAME;
@@ -49,6 +52,7 @@ public class DBHandler extends SQLiteOpenHelper implements Serializable{
         value.put(COLUMN_RssURL, feed.getURL());
         value.put(COLUMN_Feed, feed.getTitle());
         value.put(COLUMN_Link, feed.getLink());
+        value.put(COLUMN_Desc, feed.getDesc());
 
         SQLiteDatabase db = getWritableDatabase();
         db.insert(TABLE_NAME, null, value);
@@ -58,13 +62,17 @@ public class DBHandler extends SQLiteOpenHelper implements Serializable{
 
     public void deleteFeed(RSSFeeds feed){
         SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_RssURL + "=\'" + feed.getURL() + "\';");
+        if (db.delete(TABLE_NAME, COLUMN_RssURL + " = '" + feed.getURL() + "'",null ) > 0){
+            Log.i("DELETE", "is deleted");
+        } else {
+            Log.i("DELETE", "is not deleted");
+        }
     }
 
     public boolean feedInDB(String url) {
         SQLiteDatabase db = getReadableDatabase();
 
-        String query = "SELECT * FROM " + TABLE_NAME + " WHERE 1";// + COLUMN_RssURL + " = " + url;
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_RssURL + " = '" + url + "';";
         Cursor cursor = db.rawQuery(query, null);
         if(cursor.getCount() <= 0){
             cursor.close();
@@ -84,7 +92,7 @@ public class DBHandler extends SQLiteOpenHelper implements Serializable{
         Cursor cursor = db.rawQuery(query, null);
         cursor.moveToFirst();
         while(!cursor.isAfterLast()){
-            if(cursor.getString(cursor.getColumnIndex(columnName))  != null){
+            if(cursor.getString(cursor.getColumnIndex(columnName)) != null){
                 dbString.add(cursor.getString(cursor.getColumnIndex(columnName)));
             }
             cursor.moveToNext();

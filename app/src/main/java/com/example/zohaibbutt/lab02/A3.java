@@ -3,14 +3,11 @@ package com.example.zohaibbutt.lab02;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-
-import org.xml.sax.Parser;
 
 public class A3 extends AppCompatActivity {
     static final String SETTING_VAL = "my_settings";
@@ -42,13 +39,15 @@ public class A3 extends AppCompatActivity {
         b1.setOnClickListener(this::onClick);
     }
 
+    // on Button click save all data in shared preferences
     public void onClick(View view){
+        // For A1 on result back
         Intent intent = new Intent();
-
         intent.putExtra(URL_VAL, ((EditText)findViewById(R.id.T1)).getText().toString());
         intent.putExtra(LIMIT_VAL, Integer.parseInt(((EditText)findViewById(R.id.T2)).getText().toString()));
         intent.putExtra(FREQ_VAL, Integer.parseInt(((EditText)findViewById(R.id.T3)).getText().toString()));
 
+        // For future uses
         this.sharedPref = this.getSharedPreferences(SETTING_VAL,Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(URL_VAL, ((EditText)findViewById(R.id.T1)).getText().toString());

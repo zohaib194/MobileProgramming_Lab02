@@ -5,46 +5,42 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import static com.example.zohaibbutt.lab02.A1.FREQ_VAL;
+import static com.example.zohaibbutt.lab02.A1.TAG_DESC_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_LINKS_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_TITLE_LIST;
 
 
-// Thread that fetch data from XML.
-
+// Service that send broadcast to alarm receiver at the specified interval.
 public class BackgroundThread extends Service {
-
     public static ArrayList<String> ttl;
     public static ArrayList<String> lnk;
+    public static ArrayList<String> dsc;
     public int frq;
-    private boolean done = false;
     public static DBHandler db;
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
-    private final AlarmReceiver alarm = new AlarmReceiver();
     public static final String ACTION_ALARM_RECEIVER = "ACTION_ALARM_RECEIVER";
-    private final IntentFilter intentFilter = new IntentFilter("FETCH_RSS_FEED");
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // get all the data from intent
         lnk = intent.getStringArrayListExtra(TAG_LINKS_LIST);
         ttl = intent.getStringArrayListExtra(TAG_TITLE_LIST);
+        dsc = intent.getStringArrayListExtra(TAG_DESC_LIST);
         frq = intent.getIntExtra(FREQ_VAL, 0);
 
-        // db = (DBHandler) intent.getSerializableExtra(TAG_DB);
         db = new DBHandler(this, null, null, 1);
-        Toast.makeText(getApplicationContext(), "Service is onStartCommand!!", Toast.LENGTH_LONG).show();
+
         Log.i("Service_onStartCommand", "Service is onStartCommand!!");
 
         if (frq != 0) {
-            // Alarm
+            // Alarm setting
             this.alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
             Intent i = new Intent(this, AlarmReceiver.class);
@@ -61,10 +57,8 @@ public class BackgroundThread extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-
     @Override
     public void onDestroy() {
-        Toast.makeText(getApplicationContext(), "Service is Destroyed!!", Toast.LENGTH_LONG).show();
         Log.i("Service_onDestroy", "Service is Destroyed!!");
         super.onDestroy();
     }
@@ -73,6 +67,4 @@ public class BackgroundThread extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-
 }

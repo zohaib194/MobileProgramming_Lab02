@@ -9,16 +9,23 @@ public class RSSFeeds {
     private String URL;
     private String title;
     private String link;
+    private String desc;
 
 
-    public RSSFeeds(String URL, String title, String link) {
+    public RSSFeeds(String URL, String title, String link, String desc) {
         this.URL = URL;
         this.title = title;
+        this.desc = desc;
         this.link = link;
+        this.desc = desc;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setDesc(String desc){
+        this.desc = desc;
     }
 
     public void setURL(String URL) {
@@ -35,6 +42,11 @@ public class RSSFeeds {
 
     public int getId() {
         return id;
+    }
+
+    public String getDesc()
+    {
+        return desc;
     }
 
     public String getURL() {
