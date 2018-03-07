@@ -187,7 +187,8 @@ public class A1 extends AppCompatActivity {
             description = db.DBToString("FeedDesc");
             Log.i("feed_In_DB", "Feeds are already in db");
             setItemListAdapter();
-        } else {     // else start the service to fetch RSS
+        }// else {     // else start the service to fetch RSS
+
             Intent i = new Intent(this, BackgroundThread.class);
             i.putStringArrayListExtra(TAG_TITLE_LIST, titles);
             i.putStringArrayListExtra(TAG_LINKS_LIST, links);
@@ -195,7 +196,7 @@ public class A1 extends AppCompatActivity {
             i.putExtra(FREQ_VAL, freq);
             startService(i);
             Log.i("Service_running", "service is running!!");
-        }
+    //    }
     }
 
     // Broadcast receiver that is notified when async task is done and

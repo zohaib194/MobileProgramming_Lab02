@@ -32,7 +32,6 @@ import static com.example.zohaibbutt.lab02.BackgroundThread.ttl;
 public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context arg0, Intent arg1) {
-
         if (arg1 != null) {
             if (ACTION_ALARM_RECEIVER.equals(arg1.getAction())) {
                 Log.i("Alarm_Receiver", "in OnReceive!!");
@@ -52,7 +51,12 @@ public class AlarmReceiver extends BroadcastReceiver {
                     public void processFinish(Exception s) {
                         if (s == null) {
                             Log.i("CALLBACK_ASYNC_EXCEPTION", "no exception");
+
                             Intent i = new Intent();
+                            i.putExtra("TAG_VALUE", 20);
+
+
+
                             i.putStringArrayListExtra(TAG_TITLE_LIST, ttl);
                             i.putStringArrayListExtra(TAG_LINKS_LIST, lnk);
                             i.putStringArrayListExtra(TAG_DESC_LIST, dsc);
