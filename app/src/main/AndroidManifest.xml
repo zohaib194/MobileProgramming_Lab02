@@ -23,12 +23,6 @@
         <activity android:name=".A3" />
         <activity android:name=".A2"/>
 
-        <receiver android:name=".A1$taskDoneReceiver">
-            <intent-filter>
-                <action android:name="Task_Done_Listener" />
-            </intent-filter>
-        </receiver>
-
         <receiver android:name=".AlarmReceiver">
             <intent-filter>
                 <action android:name="ACTION_ALARM_RECEIVER" />
@@ -36,7 +30,7 @@
         </receiver>
 
         <service android:name=".BackgroundThread"
-            android:exported="false"
+            android:exported="true"
             android:enabled="true"/>
     </application>
 

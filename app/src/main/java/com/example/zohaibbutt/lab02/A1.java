@@ -100,10 +100,10 @@ public class A1 extends AppCompatActivity {
                 startActivityForResult(intent, GET_RESULT);
             } else { // else url is specified and Rss feeds can be fetched
                 Intent i = new Intent(this, BackgroundThread.class);
-                i.putStringArrayListExtra(TAG_TITLE_LIST, titles);
+              /*  i.putStringArrayListExtra(TAG_TITLE_LIST, titles);
                 i.putStringArrayListExtra(TAG_LINKS_LIST, links);
                 i.putStringArrayListExtra(TAG_DESC_LIST, description);
-                i.putExtra(FREQ_VAL, freq);
+                i.putExtra(FREQ_VAL, freq); */
                 startService(i);
                 Log.i("Service_running", "service is running!!");
             }
@@ -190,10 +190,10 @@ public class A1 extends AppCompatActivity {
         }// else {     // else start the service to fetch RSS
 
             Intent i = new Intent(this, BackgroundThread.class);
-            i.putStringArrayListExtra(TAG_TITLE_LIST, titles);
+         /*   i.putStringArrayListExtra(TAG_TITLE_LIST, titles);
             i.putStringArrayListExtra(TAG_LINKS_LIST, links);
             i.putStringArrayListExtra(TAG_DESC_LIST, description);
-            i.putExtra(FREQ_VAL, freq);
+            i.putExtra(FREQ_VAL, freq); */
             startService(i);
             Log.i("Service_running", "service is running!!");
     //    }

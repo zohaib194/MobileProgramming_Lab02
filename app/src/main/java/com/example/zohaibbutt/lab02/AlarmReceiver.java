@@ -4,6 +4,7 @@ package com.example.zohaibbutt.lab02;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -19,22 +20,30 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static com.example.zohaibbutt.lab02.A1.SETTING_VAL;
 import static com.example.zohaibbutt.lab02.A1.TAG_DESC_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_LINKS_LIST;
 import static com.example.zohaibbutt.lab02.A1.TAG_TITLE_LIST;
-import static com.example.zohaibbutt.lab02.A1.requestURL;
+import static com.example.zohaibbutt.lab02.A1.URL_VAL;
 import static com.example.zohaibbutt.lab02.BackgroundThread.ACTION_ALARM_RECEIVER;
 import static com.example.zohaibbutt.lab02.BackgroundThread.db;
-import static com.example.zohaibbutt.lab02.BackgroundThread.dsc;
-import static com.example.zohaibbutt.lab02.BackgroundThread.lnk;
-import static com.example.zohaibbutt.lab02.BackgroundThread.ttl;
+
 
 public class AlarmReceiver extends BroadcastReceiver {
+    public ArrayList<String> ttl = new ArrayList<>();
+    public ArrayList<String> lnk = new ArrayList<>();
+    public ArrayList<String> dsc = new ArrayList<>();
+    private SharedPreferences settings;
+    private String requestURL = null;
+
     @Override
     public void onReceive(Context arg0, Intent arg1) {
         if (arg1 != null) {
             if (ACTION_ALARM_RECEIVER.equals(arg1.getAction())) {
                 Log.i("Alarm_Receiver", "in OnReceive!!");
+                db = new DBHandler(arg0, null, null, 1);
+                this.settings = arg0.getSharedPreferences(SETTING_VAL, Context.MODE_PRIVATE);
+                requestURL = settings.getString(URL_VAL, "");
 
                 // empty array lists
                 if (ttl != null && lnk != null && dsc != null) {
@@ -42,6 +51,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                     ttl.clear();
                     lnk.clear();
                     dsc.clear();
+                } else {
+                    Log.i("Lists_NULL", "lists are null");
                 }
 
                 // Set the alarm here.
@@ -54,9 +65,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
                             Intent i = new Intent();
                             i.putExtra("TAG_VALUE", 20);
-
-
-
                             i.putStringArrayListExtra(TAG_TITLE_LIST, ttl);
                             i.putStringArrayListExtra(TAG_LINKS_LIST, lnk);
                             i.putStringArrayListExtra(TAG_DESC_LIST, dsc);
@@ -114,6 +122,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         @Override
         protected final Exception doInBackground(ArrayList<String>... lists) {
             try {
+                 Log.i("URL_RESQUEST", ""+requestURL);
                 URL url = new URL(requestURL);
 
                 XmlPullParserFactory fact = XmlPullParserFactory.newInstance();
@@ -177,6 +186,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 }
             } catch (MalformedURLException e) {
                 exception = e;
+                e.printStackTrace();
                 Log.e("MALFORMED_URL_EXCEPTION", e.toString());
             } catch (IOException e) {
                 exception = e;
